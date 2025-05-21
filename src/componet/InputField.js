@@ -34,7 +34,22 @@ export const SucessToast = (msg = "sucess msg missing" , positon = "top-right") 
 export const timeSet=()=> {
     return moment().format("MM DD YYYY, h:mm:ss a")
   }
-export const GroupList=[
+
+
+  export const customStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    padding:'20px',
+    borderRadius:'20px',
+    width:"600px"
+  },
+};
+export const GroupListed=[
 {
     id:1,
     grouphead: "Friends Reunion",
