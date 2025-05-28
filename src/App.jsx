@@ -4,6 +4,7 @@ import SingUp from "./page/SingUp";
 import SingIn from "./page/SingIn";
 import RootLayout from "./RootLayout/RootLayout";
 import Home from "./page/HomePage/Home";
+import Chat from "./page/Chat/Chat";
 const App = () => {
   return (
     <>
@@ -12,7 +13,7 @@ const App = () => {
           
           <Route path="/" element={<RootLayout />}> 
           <Route index element={<Home />} />
-          <Route path="/Messenger" element={"this is messenger page"} />
+          <Route path="/Messenger" element={<Chat />} />
           <Route path="/Notification" element={"this is Notification page"} />
           <Route path="/Setting" element={"this is setting page"} />
           </Route>

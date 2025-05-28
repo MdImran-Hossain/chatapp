@@ -3,6 +3,7 @@ import React from "react";
 import { IoSearch } from "react-icons/io5";
 import { HiDotsVertical } from "react-icons/hi";
 import { FaUserTie } from "react-icons/fa";
+import { GroupListed } from "./InputField";
 const Group = ({
   GroupHead,
   GroupText,
@@ -13,29 +14,34 @@ const Group = ({
 }) => {
   return (
     <>
-      <div
-        className={`${GroupBorder} flex justify-center items-center pt-[14px] pb-[10px] border-b-2 border-b-[rgba(0,0,0,0.25)]`}
-      >
-        <div className="w-[70px] h-[70px] rounded-full border flex justify-center items-center">
-          <span className="text-5xl">
-            <FaUserTie />
-          </span>
-          
-        </div>
-        <div className={`${User} pl-[14px] pr-[52px] `}>
-          <h4 className="text-[18px] font-semibold font-poppins text-black  ">
-            {GroupHead}
-          </h4>
-          <p className="text-[14px] font-medium font-poppins text-[rgba(77,77,77,0.75)]">
-            {GroupText}
-          </p>
-        </div>
-        <div
-          className={`px-[20px] py-1.5 text-[20px] font-semibold cursor-pointer font-poppins bg-bandColor rounded-xl ${GroupBtnDesing}`}
-        >
-          {GroupBtn}
-        </div>
-      </div>
+      <div className="w-[427px] shadow-2xl rounded-2xl py-[20px] px-[15px]">
+                    <div className="flex justify-between items-center ">
+                      <h3 className="text-[20px] font-semibold font-poppins text-[#000]">
+                      Group
+                      </h3>
+                      <span className="text-bandColor text-2xl">
+                        <HiDotsVertical />
+                      </span>
+                    </div>
+                    <div>
+                      {GroupListed.map((content, index) => {
+                        return (
+                          <Group
+                            key={content.id}
+                            GroupBorder={
+                              index === GroupListed.length - 1
+                                ? "border-none"
+                                : "border-b-2"
+                            }
+                            GroupHead={content.grouphead}
+                            GroupText={content.grouptext}
+                            GroupBtn={content.Btn}
+                            GroupBtnDesing={"bg-transparent text-[#00000080]"}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
     </>
   );
 };
