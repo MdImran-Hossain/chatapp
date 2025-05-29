@@ -8,6 +8,7 @@ import Friend from "../../componet/Friend";
 import BlockList from "../../componet/BlockList";
 import GroupList from "../../componet/GroupList";
 import { GroupListed } from "../../componet/InputField";
+import { FaUserTie } from "react-icons/fa";
 
 const Home = () => {
   return (
@@ -49,22 +50,34 @@ const Home = () => {
                 </span>
               </div>
               <div>
-                {GroupListed.map((content, index) => {
-                  return (
-                    <Group
-                      key={content.id}
-                      GroupBorder={
-                        index === GroupList.length - 1
-                          ? "border-none"
-                          : "border-b-2"
-                      }
-                      GroupHead={content.grouphead}
-                      GroupText={content.grouptext}
-                      GroupBtn={content.Btn}
-                      GroupBtnDesing={"bg-transparent text-[#00000080]"}
-                    />
-                  );
-                })}
+               
+               {GroupListed.map((content, index) => (
+                             <div
+                               key={index}
+                               className={
+                                 GroupListed?.length - 1 === index
+                                   ? "flex justify-between items-center pt-[14px] pb-[10px]"
+                                   : "flex justify-between items-center pt-[14px] pb-[10px] border-b-2 border-b-[rgba(0,0,0,0.25)]"
+                               }
+                             >
+                               <div className="w-[70px] h-[70px] rounded-full border flex justify-center items-center">
+                                 <span className="text-5xl">
+                                   <FaUserTie />
+                                 </span>
+                               </div>
+                               <div className="pl-[14px] pr-[52px]">
+                                 <h4 className="text-[18px] font-semibold font-poppins text-black">
+                                   {content.grouphead}
+                                 </h4>
+                                 <p className="text-[14px] font-medium font-poppins text-[rgba(77,77,77,0.75)]">
+                                   {content.grouptext}
+                                 </p>
+                               </div>
+                               <div className="px-[20px] py-1.5 text-[20px] font-semibold cursor-pointer font-poppins bg-bandColor rounded-xl">
+                                 {content.Btn}
+                               </div>
+                             </div>
+                           ))}
               </div>
             </div>
                 <div>

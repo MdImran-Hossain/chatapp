@@ -5,8 +5,10 @@ import UserSkeleton from "../Skeleton/UserSkeleton";
 import { HiDotsVertical } from 'react-icons/hi';
 import moment from 'moment';
 import { timeSet } from './InputField';
-const Friend = () => {
-
+import { FriendAction } from '../features/slice/friendSlice';
+import { useDispatch } from "react-redux";
+const Friend = ({showButton= true}) => {
+const dispatch =useDispatch()
 const auth = getAuth();
     const db = getDatabase();
     const [friend,setfriend]=useState([])
@@ -65,7 +67,18 @@ const handleBlock = (frd) => {
 };
 //  console.log(friend);
  
+const handleOnclick=(friendInfo)=>{
 
+
+const UseObj={
+  userUid:friendInfo.senderUid,
+  userName:friendInfo.senderUsename,
+  userEmail:friendInfo.senderEmail,
+  userProfile:friendInfo.senderprofile_picture
+}
+dispatch(FriendAction(UseObj))
+// console.log('jhfkjf',UseObj);
+}
   return (
     <>
       <div className="w-[427px] shadow-2xl rounded-2xl py-[20px] px-[15px]">
@@ -81,8 +94,9 @@ const handleBlock = (frd) => {
                       {friend.map((item, index) => {
                         return (
                          <div key={index}
-                            className= {
-                              friend?.length - 1 === index?"flex justify-between items-center pt-[14px] pb-[10px]":"flex justify-between items-center pt-[14px] pb-[10px] border-b-2 border-b-[rgba(0,0,0,0.25)]"
+                         onClick={()=>handleOnclick(item)}
+                            className= { 
+                              friend?.length - 1 === index?"flex justify-between cursor-pointer items-center pt-[14px] pb-[10px]":"flex justify-between items-center cursor-pointer pt-[14px] pb-[10px] border-b-2 border-b-[rgba(0,0,0,0.25)]"
                               } >
                            <div className="flex justify-start items-center gap-3">
                            <div className="w-[70px] h-[70px] rounded-full border flex justify-center items-center">
@@ -103,12 +117,15 @@ const handleBlock = (frd) => {
                               </p>
                             </div>
                            </div>
-                          <button
+                           {
+                            showButton &&  <button
                             onClick={() => handleBlock(item)}
                               className={`px-[20px] py-1.5 text-[20px] font-semibold cursor-pointer font-poppins bg-bandColor rounded-xl `}
                             >
                               Block
                             </button>
+                           }
+                         
                           
                           </div>
                         );

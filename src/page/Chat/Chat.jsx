@@ -2,52 +2,56 @@ import React, { useEffect, useState } from "react";
 import Group from "../../componet/Group";
 import Friend from "../../componet/Friend";
 import { HiDotsVertical } from "react-icons/hi";
-import { useContext } from "react";
-import { countContext } from "../../contex/CountContex"; 
 import { FaCameraRetro, FaRegSmile, FaTelegram } from "react-icons/fa";
 import EmojiPicker from "emoji-picker-react";
 import { useSelector } from "react-redux";
 import { getDatabase, onValue, push, ref } from "firebase/database";
 import { getAuth } from "firebase/auth";
 
-// import lib from "../../lib/lib";
-
 const Chat = () => {
-  const [msg, setmsg] = useState("");
+  const [msg, setMsg] = useState("");
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [allMsg, setAllMsg] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const db = getDatabase();
   const auth = getAuth();
-  const [emojiOpen, setemojiOpen] = useState(false);
-  const [allMsg, setAllmsg] = useState([]);
-  const [loading, setloading] = useState(false);
-  const { value: user } = useSelector((store) => store.friend);
+  const user = useSelector((store) => store.friend.value);
 
   useEffect(() => {
-    const fetchSingleMsg = async () => {
-      const dbref = ref(db, "singlemsg");
-      onValue(dbref, (snapshot) => {
-        let msgArr = [];
-        snapshot.forEach((item) => {
-          if (
-            auth.currentUser.uid == item.val().whoSendMsgUid ||
-            auth.currentUser.uid == item.val().whoRecivedMsgUid
-          )
-            msgArr.push({ ...item.val(), msgKey: item.key });
-        });
-        setAllmsg(msgArr);
+    console.log("Redux user:", user);
+    console.log("Auth currentUser:", auth.currentUser);
+  }, [user, auth]);
+
+  useEffect(() => {
+    if (!auth.currentUser) return;
+
+    const dbref = ref(db, "singlemsg");
+    onValue(dbref, (snapshot) => {
+      let msgArr = [];
+      snapshot.forEach((item) => {
+        const data = item.val();
+        if (
+          auth.currentUser.uid === data.whoSendMsgUid ||
+          auth.currentUser.uid === data.whoRecivedMsgUid
+        ) {
+          msgArr.push({ ...data, msgKey: item.key });
+        }
       });
-    };
-    fetchSingleMsg();
-  }, []);
-  // handleEmoji
+      setAllMsg(msgArr);
+    });
+  }, [auth]);
+
   const handleEmoji = ({ emoji }) => {
-    setmsg((prev) => prev + emoji);
+    setMsg((prev) => prev + emoji);
   };
 
-  //sendMsg
   const sendMsg = async () => {
-    setloading(true);
+    if (!msg.trim()) return;
+
+    setLoading(true);
     try {
-      push(ref(db, "singlemsg"), {
+      await push(ref(db, "singlemsg"), {
         whoSendMsgUid: auth.currentUser.uid,
         whoSendMsgusername: auth.currentUser.displayName,
         whoSendMsgEmail: auth.currentUser.email,
@@ -55,136 +59,140 @@ const Chat = () => {
         whoRecivedMsgUid: user.userUid,
         whoRecivedMsgUserName: user.userName,
         whoRecivedMsgEmail: user.userEmail,
-        whoRecivedMsgProfilePicture: user.userProfilePicture,
+        whoRecivedMsgProfilePicture: user.userProfile,
         message: msg,
-        // createdAt: lib.getTimeNow(),
+        // createdAt: new Date().toISOString(), // optionally
       });
     } catch (error) {
-      console.error("error from ", error);
+      console.error("Error sending message:", error);
     } finally {
-      setmsg("");
-      setemojiOpen(false);
-      setloading(false);
+      setMsg("");
+      setEmojiOpen(false);
+      setLoading(false);
     }
   };
 
-  console.log(allMsg);
+  if (!auth.currentUser || !user || !user.userUid) {
+    return (
+      <div className="h-screen flex items-center justify-center text-xl font-bold">
+        Loading chat...
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full bg-amber-200 h-[95dvh] ">
+    <div className="w-full bg-amber-200 h-[100dvh]">
       <div className="flex h-full relative">
+        {/* Sidebar */}
         <div className="w-[40%] bg-blue-300 h-full">
           <Group />
           <Friend showButton={false} />
         </div>
-        <div className="w-[60%] bg-green-300 h-full p-7 ">
-          {/* chat top part */}
+
+        {/* Chat Area */}
+        <div className="w-[60%] bg-green-300 h-full p-7">
+          {/* Top Bar */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-x-3">
-              <div className="w-[70px] h-[70px] rounded-full">
-                <picture>
-                  <img
-                    src={user.userProfilePicture}
-                    alt="profile pic"
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                </picture>
+              <div className="w-[70px] h-[70px] rounded-full overflow-hidden">
+                <img
+                  src={user.userProfile}
+                  alt="profile pic"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
-                <h1>{user.userName} </h1>
-                <span>{navigator.onLine ? "Online" : "offline"}</span>
+                <h1>{user.userName}</h1>
+                <span>{navigator.onLine ? "Online" : "Offline"}</span>
               </div>
             </div>
-            <span>
-              <HiDotsVertical />
-            </span>
+            <HiDotsVertical />
           </div>
-          {/* chat top part */}
-          {/* chat view */}
+
           <hr className="mt-4" />
+
+          {/* Messages */}
           <div className="flex flex-col overflow-y-scroll h-[70vh]">
-            {allMsg?.map((msg) =>
-              //auth.currentUser.uid == item.WhoSendMsgUid &&
-              // item.whoRecivedMsgUid == Users.id
-              auth.currentUser.uid === msg.whoSendMsgUid &&
-              msg.whoRecivedMsgUid == user.userUid ? (
-                <div className="self-end">
-                  <div className="flex flex-col items-start mt-7">
-                    <div className="px-5 w-full  text-wrap py-3 bg-blue-300 rounded-3xl">
-                      <h2 className="">{msg.message}</h2>
+            {allMsg.map((msg) => {
+              const isSender = auth.currentUser.uid === msg.whoSendMsgUid;
+              const isReceiver = auth.currentUser.uid === msg.whoRecivedMsgUid;
+
+              if (
+                (isSender && msg.whoRecivedMsgUid === user.userUid) ||
+                (isReceiver && msg.whoSendMsgUid === user.userUid)
+              ) {
+                return isSender ? (
+                  <div key={msg.msgKey} className="self-end">
+                    <div className="flex flex-col items-start mt-7">
+                      <div className="px-5 py-3 bg-blue-300 rounded-3xl">
+                        <h2>{msg.message}</h2>
+                      </div>
+                      <p className="text-xs">Today, 2:02pm</p>
                     </div>
-                    <p>Today, 2:02pm</p>
                   </div>
-                </div>
-              ) : auth.currentUser.uid == msg.whoRecivedMsgUid &&
-                user.userUid == msg.WhoSendMsgUid ? (
-                <div className="self-end">
-                  <div className="flex flex-col items-start mt-4">
-                    <div className="px-5 w-full  text-wrap py-3 bg-gray-300 rounded-3xl">
-                      <h2 className="">{msg.message}</h2>
+                ) : (
+                  <div key={msg.msgKey} className="self-start">
+                    <div className="flex flex-col items-start mt-4">
+                      <div className="px-5 py-3 bg-gray-300 rounded-3xl">
+                        <h2>{msg.message}</h2>
+                      </div>
+                      <p className="text-xs">Today, 2:02pm</p>
                     </div>
-                    <p>Today, 2:02pm</p>
                   </div>
-                </div>
-              ) : (
-                <div className="self-end">
-                  <div className="flex flex-col items-start mt-4">
-                    <div className="px-5 w-full  text-wrap py-3 bg-gray-300 rounded-3xl">
-                      <h2 className="">{msg.message}</h2>
-                    </div>
-                    <p>Today, 2:02pm</p>
-                  </div>
-                </div>
-              )
-            )}
+                );
+              }
+
+              return null;
+            })}
           </div>
-          {/* chat view */}
+
           <hr className="mt-4" />
-          {/* send ui */}
+
+          {/* Message Input */}
           <div className="flex gap-x-6 items-center mt-4 relative">
             <input
               type="text"
-              placeholder="send msg .."
-              id="sendInput"
-              name="sendInput"
-              onChange={(e) => setmsg(e.target.value)}
+              placeholder="Send a message..."
               value={msg}
-              className="py-3 px-2 bg-gray-200 w-full rounded-2xl  border"
+              onChange={(e) => setMsg(e.target.value)}
+              className="py-3 px-2 bg-gray-200 w-full rounded-2xl border"
             />
-            {/* camera & emoji */}
-            <div className="absolute right-[12%]">
-              <div className="flex items-center gap-x-4">
-                <span
-                  className="text-xl cursor-pointer"
-                  onClick={() => setemojiOpen(!emojiOpen)}>
-                  <FaRegSmile />
-                </span>
-                <span className="text-xl cursor-pointer">
-                  <FaCameraRetro />
-                </span>
-              </div>
+
+            {/* Emoji + Camera */}
+            <div className="absolute right-[12%] flex items-center gap-x-4">
+              <span
+                className="text-xl cursor-pointer"
+                onClick={() => setEmojiOpen((prev) => !prev)}
+              >
+                <FaRegSmile />
+              </span>
+              <span className="text-xl cursor-pointer">
+                <FaCameraRetro />
+              </span>
             </div>
-            {/* camera & emoji */}
+
+            {/* Send Button */}
             {loading ? (
-              <span className="text-5xl animate-spin">
+              <span className="text-5xl animate-spin text-gray-500">
                 <FaTelegram />
               </span>
             ) : (
-              <span className="text-5xl" onClick={sendMsg}>
+              <span className="text-5xl cursor-pointer" onClick={sendMsg}>
                 <FaTelegram />
               </span>
             )}
           </div>
-          {/* send ui */}
         </div>
 
-        {/* emoji picker component  */}
-        <div className="absolute right-[5%] bottom-[10%]">
-          <EmojiPicker open={emojiOpen} onEmojiClick={handleEmoji} />
-        </div>
-        {/* emoji picker component  */}
+        {/* Emoji Picker */}
+        {emojiOpen && (
+          <div className="absolute right-[5%] bottom-[10%] z-50">
+            <EmojiPicker open={emojiOpen} onEmojiClick={handleEmoji} />
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
 export default Chat;
